@@ -1,28 +1,29 @@
 import './App.css'
-import {useEffect, useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import io from "socket.io-client"
 
 function App() {
 
   const [newMessage , setNewMessage] = useState("")
   const [oldMessages , setOldMessages] = useState([])
+  const socketRef = useRef(null)
 
   useEffect(()=>{
-    let socket = io("http://localhost:9000")
-    socket.on("displayAllMessage" , myNewMessage =>{
+    socketRef.current = io("http://localhost:9000")
+    socketRef.current.on("displayAllMessage" , myNewMessage =>{
       setOldMessages(myNewMessage)
     })
-    socket.on("broadcastMessage" , newMessagess=>{
-      setOldMessages(prev=>[...prev , ,newMessagess])
+    socketRef.current.on("broadcastMessage" , newMessagess=>{
+      setOldMessages(prev=>[...prev ,newMessagess])
     })
-    return ()=>socket.disconnect()
+    return ()=>socketRef.current.disconnect()
   } , [])
 
 
   const sendMessage = ()=>{
     let socket = io("http://localhost:9000")
-    if(newMessage.trim() !== ""){
-      socket.emit("newMessageAppeared", newMessage)
+    if(newMessage.trim()){
+      socketRef.current.emit("newMessageAppeared", newMessage)
       console.log(newMessage)
       setNewMessage("")
     }
